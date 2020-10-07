@@ -16,33 +16,96 @@ chai.use(chaiHttp);
 suite('Functional Tests', function() {
     
     suite('GET /api/stock-prices => stockData object', function() {
+      let likes = 0;
+      let relLikes = 0;
       
       test('1 stock', function(done) {
        chai.request(server)
         .get('/api/stock-prices')
         .query({stock: 'goog'})
         .end(function(err, res){
-          
-          //complete this one too
-          
+          assert.equal(res.status, 200);
+          assert.isObject(res.body.stockData);
+          assert.property(res.body.stockData, 'stock');
+          assert.property(res.body.stockData, 'price');
+          assert.property(res.body.stockData,'likes');
+          assert.equal(res.body.stockData.stock, 'goog');
           done();
         });
       });
       
       test('1 stock with like', function(done) {
-        
+       chai.request(server)
+        .get('/api/stock-prices')
+        .query({stock: 'goog', like: true})
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isObject(res.body.stockData);
+          assert.property(res.body.stockData, 'stock');
+          assert.property(res.body.stockData, 'price');
+          assert.property(res.body.stockData,'likes');
+          likes = res.body.stockData.likes;
+          assert.isAbove(res.body.stockData.likes, 0);
+          assert.equal(res.body.stockData.stock, 'goog');
+          done();
+        });
       });
       
       test('1 stock with like again (ensure likes arent double counted)', function(done) {
-        
+       chai.request(server)
+        .get('/api/stock-prices')
+        .query({stock: 'goog', like: true})
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isObject(res.body.stockData);
+          assert.property(res.body.stockData, 'stock');
+          assert.property(res.body.stockData, 'price');
+          assert.property(res.body.stockData,'likes');
+          assert.equal(res.body.stockData.likes, likes);
+          assert.equal(res.body.stockData.stock, 'goog');
+          done();
+        });
       });
       
       test('2 stocks', function(done) {
-        
+       chai.request(server)
+        .get('/api/stock-prices')
+        .query({stock: ['cccc', 'tlc']})
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isArray(res.body.stockData);
+          assert.property(res.body.stockData[0], 'stock');
+          assert.property(res.body.stockData[0],'price');
+          assert.property(res.body.stockData[0], 'rel_likes');
+          assert.oneOf(res.body.stockData[0].stock, ['cccc', 'tlc']);
+          assert.property(res.body.stockData[1], 'stock');
+          assert.property(res.body.stockData[1],'price');
+          assert.property(res.body.stockData[1], 'rel_likes');
+          assert.oneOf(res.body.stockData[1].stock, ['cccc', 'tlc']);
+          relLikes = Math.abs(res.body.stockData[0], 'rel_likes');
+          done();
+        });
       });
       
       test('2 stocks with like', function(done) {
-        
+       chai.request(server)
+        .get('/api/stock-prices')
+        .query({stock: ['cccc', 'tlc'], like: true})
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isArray(res.body.stockData);
+          assert.property(res.body.stockData[0], 'stock');
+          assert.property(res.body.stockData[0],'price');
+          assert.property(res.body.stockData[0], 'rel_likes');
+          assert.oneOf(res.body.stockData[0].stock, ['cccc', 'tlc']);
+          assert.property(res.body.stockData[1], 'stock');
+          assert.property(res.body.stockData[1],'price');
+          assert.property(res.body.stockData[1], 'rel_likes');
+          assert.oneOf(res.body.stockData[1].stock, ['cccc', 'tlc']);
+          assert.equal(res.body.stockData[0].rel_likes + res.body.stockData[1].rel_likes, 0);
+          assert.equal(Math.abs(res.body.stockData[0].rel_likes), relLikes);
+          done();
+        });
       });
       
     });
